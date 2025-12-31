@@ -34,7 +34,7 @@
     .card{
       width:min(720px, 96vw);
       max-width:720px;
-      /* background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); */
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       border-radius:18px;
       padding:20px;
       box-shadow: var(--shadow);
@@ -78,6 +78,9 @@
 <body>
   <div class="card" role="main" aria-labelledby="title">
     <h1 id="title">Happy New Year — Countdown</h1>
+    <div class="subtitle">When the countdown finishes this page will open the fireworks show automatically.</div>
+
+    <div class="target" id="targetDisplay">Target: —</div>
 
     <div class="count" aria-live="polite" aria-atomic="true">
       <div class="unit">
@@ -95,6 +98,8 @@
         <div class="label">Seconds</div>
       </div>
     </div>
+
+    <div class="hint" id="hint">Edit only the TARGET constant inside the script to change the countdown time.</div>
   </div>
 
   <script>
