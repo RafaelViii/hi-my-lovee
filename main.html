@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <title>Fireworks Show — main.html</title>
+  
+</head>
+<body>
+  <div class="overlay" id="overlay">
+    <div class="time" id="status">Fireworks show: running — endless</div>
+    <button class="btn" id="restart" title="Restart the show" style="display:none">Replay</button>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div class="ended" id="ended" style="display:none">
+    <div class="card">
+      <h2>Fireworks show ended</h2>
+      <p>Hope you enjoyed the show ✨</p>
+      <button id="replayBtn">Replay show</button>
+    </div>
+  </div>
+
+<script src="fireworks.js"></script>
+</body>
+</html>
