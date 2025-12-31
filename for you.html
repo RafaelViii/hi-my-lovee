@@ -5,7 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="style.css" />
   <title>Fireworks Show — main.html</title>
-  
+
+  <!-- Cute rounded display font -->
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+
+
+
 </head>
 <body>
   <div class="overlay" id="overlay">
@@ -23,6 +29,33 @@
     </div>
   </div>
 
+  <!-- Paper popup (cute letter) -->
+  <div class="paper-wrap" id="paperWrap" aria-hidden="true">
+    <div class="paper" id="paper" role="dialog" aria-labelledby="paperTitle" aria-modal="true">
+      <button class="paper-close" id="paperClose" aria-label="Close letter">✕</button>
+
+      <div class="paper-inner">
+        <h3 class="paper-title" id="paperTitle">
+          <span class="heart" aria-hidden="true"></span>
+          A little note for you
+        </h3>
+        <p class="paper-sub">From me, with lots of sparkles ✨</p>
+
+        <div class="letter" id="letterContent">
+          Hey love! 💌<br><br>
+          Happy moments are on their way — may this little night be filled with laughter, cozy hugs,
+          and the kind of sparkle that stays with you all year. You're my favorite surprise and I hope
+          the fireworks make your heart smile tonight. <span style="display:inline-block; transform:translateY(2px)">🎆💖</span>
+          <br><br>
+          With all my warmest wishes,<br>
+          — your secret admirer 🧡
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script src="fireworks.js"></script>
+
+
 </body>
-</html>
+</html>"

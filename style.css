@@ -1,84 +1,487 @@
+/* Fullscreen canvas and night background */
+html, body {
+  height: 100%;
+  margin: 0;
+  background: linear-gradient(180deg, #081029 0%, #101233 35%, #0a0510 100%);
+  overflow: hidden;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #fff;
+}
 
-    /* Fullscreen canvas and night background */
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: linear-gradient(180deg, #081029 0%, #101233 35%, #0a0510 100%);
-      overflow: hidden;
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      color: #fff;
-    }
+/* Respect iOS safe area when using fixed elements */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
 
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 
-    /* Overlay message when show ends */
-    .overlay {
-      position: fixed;
-      left: 50%;
-      top: 10px;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.35);
-      border: 1px solid rgba(255,255,255,0.06);
-      padding: 8px 14px;
-      border-radius: 8px;
-      backdrop-filter: blur(4px);
-      z-index: 10;
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      pointer-events: none;
-    }
+/* Overlay message when show ends */
+.overlay {
+  position: fixed;
+  left: 50%;
+  top: calc(10px + var(--safe-top));
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 8px 14px;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  pointer-events: none;
+}
 
-    .overlay .btn {
-      pointer-events: auto;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.08);
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+.overlay .btn {
+  pointer-events: auto;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
 
-    .overlay .time {
-      opacity: 0.9;
-      font-size: 14px;
-    }
+.overlay .time {
+  opacity: 0.9;
+  font-size: 14px;
+}
 
-    .ended {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      z-index: 20;
-      pointer-events: none;
-    }
+.ended {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 20;
+  pointer-events: none;
+}
 
-    .card {
-      pointer-events: auto;
-      background: rgba(0,0,0,0.6);
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.06);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-    }
+.card {
+  pointer-events: auto;
+  background: rgba(0,0,0,0.6);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+}
 
-    .card button {
-      margin-top: 12px;
-      padding: 8px 14px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      background: linear-gradient(90deg,#ff8a00,#e52e71);
-      color: white;
-      font-weight: 600;
-    }
+.card button {
+  margin-top: 12px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(90deg,#ff8a00,#e52e71);
+  color: white;
+  font-weight: 600;
+}
 
-    /* small accessibility: reduce motion */
-    @media (prefers-reduced-motion: reduce) {
-      .overlay, .card, canvas { transition: none !important; animation: none !important; }
+/* Paper popup base styles */
+.paper-wrap {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  pointer-events: none;
+  /* initially hidden; JS toggles display and class */
+  display: none;
+  padding: 18px; /* breathing room on small screens */
+}
+
+/* CUTESY PAPER */
+.paper {
+  pointer-events: auto;
+  width: min(520px, 75%);
+  max-width: 640px;
+  background: linear-gradient(180deg, #fffefc 0%, #fff7ee 100%);
+  color: #111;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow:
+    0 30px 60px rgba(6,8,14,0.55),
+    0 6px 18px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.7);
+  border: 3px solid rgba(255, 255, 255, 0.562);
+  transform-origin: center bottom;
+  position: relative;
+  overflow: visible;
+  /* subtle paper texture using multiple radial gradients */
+  background-image:
+    radial-gradient(circle at 10% 10%, rgba(255, 244, 230, 0.918) 0, transparent 10%),
+    radial-gradient(circle at 85% 80%, rgba(255, 244, 230, 0.849) 0, transparent 8%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.781), rgba(255, 255, 255, 0.589));
+}
+
+/* little washi tape at the top for cuteness */
+.paper::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) rotate(-6deg);
+  top: -12px;
+  width: 120px;
+  height: 28px;
+  background: linear-gradient(90deg, rgba(255,200,210,0.95), rgba(255,230,200,0.95));
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  z-index: 4;
+  opacity: 0.95;
+  border: 1px solid rgba(0,0,0,0.04);
+  transform-origin: center;
+}
+
+/* small shiny sticker on top-right */
+.paper::after {
+  content: "💌";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 18px;
+  transform: rotate(-6deg);
+  z-index: 5;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
+}
+
+/* internal container for spacing and alignment */
+.paper-inner {
+  padding: 12px 22px 18px;
+  text-align: center; /* center message alignment for cutesy feel */
+  display: block;
+  position: relative;
+  z-index: 2;
+}
+
+/* bigger, playful title */
+.paper-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  font-family: "Baloo 2", "Poppins", system-ui;
+  margin: 6px 0 6px;
+  font-weight: 700;
+  color: #4a3540;
+  font-size: 20px;
+  letter-spacing: 0.2px;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* subtitle smaller and lighter */
+.paper-sub {
+  margin: 0 0 10px;
+  color: #6e5f66;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Letter area: centered, cozy, with soft background and rounded edges */
+.letter {
+  font-family: "Poppins", "Segoe UI", system-ui;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #322a2a;
+  margin: 0 auto 12px;
+  white-space: pre-wrap;
+  text-align: center; /* center the message as requested */
+  max-width: 88%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,250,245,0.96));
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px dashed rgba(0,0,0,0.05);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  transform-origin: center;
+  /* slightly lifted */
+  transition: transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms;
+}
+
+/* subtle emphasis on emoji line */
+.letter span {
+  display: inline-block;
+  transform: translateY(2px);
+  font-size: 18px;
+}
+
+/* signature style at the bottom of the letter */
+.letter .signature {
+  display: block;
+  margin-top: 12px;
+  font-family: "Baloo 2", "Poppins", system-ui;
+  font-weight: 600;
+  color: #5a3b44;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+}
+
+/* decorative divider flourish */
+.paper-inner .divider {
+  height: 10px;
+  margin: 8px auto 12px;
+  width: 80px;
+  background: linear-gradient(90deg, rgba(255,140,120,0.12), rgba(255,220,200,0.12));
+  border-radius: 999px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
+}
+
+/* CTA buttons: friendlier, pill-like */
+.paper-cta {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.btn-paper {
+  background: linear-gradient(90deg,#ff9a6b,#ff5c9d);
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(255,110,140,0.12);
+  transform: translateY(0);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  font-family: "Baloo 2", "Poppins", system-ui;
+  font-size: 15px;
+  min-height: 44px; /* comfortable touch target */
+}
+.btn-paper:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 36px rgba(255,110,140,0.14);
+}
+
+.btn-quiet {
+  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(250,250,250,0.9));
+  border: 1px solid rgba(200,180,200,0.18);
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #5a4a56;
+  font-weight: 600;
+  box-shadow: 0 6px 12px rgba(6,8,14,0.05);
+  min-height: 44px; /* comfortable touch target */
+  font-size: 14px;
+}
+
+/* Cute heart decoration (bigger & softer) */
+.heart {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  background: linear-gradient(180deg,#ff7aa6,#ff477e);
+  transform: rotate(45deg);
+  margin-left: -2px;
+  border-radius: 2px;
+  position: relative;
+  box-shadow: 0 6px 18px rgba(255,90,120,0.12);
+  border: 1px solid rgba(255,255,255,0.28);
+}
+.heart::before,
+.heart::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(180deg,#ff7aa6,#ff477e);
+  border-radius: 50%;
+  top: -8px;
+  left: 0;
+}
+.heart::after {
+  left: -8px;
+}
+
+/* Pop-in animation for the paper dialog */
+@keyframes paperPopIn {
+  0% {
+    transform: translateY(28px) rotate(-6deg) scale(0.96);
+    opacity: 0;
+    filter: blur(6px) saturate(0.85);
+  }
+  60% {
+    transform: translateY(-8px) rotate(2deg) scale(1.02);
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Small gentle bounce when opened */
+@keyframes paperBounce {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+  70% { transform: translateY(2px); }
+  100% { transform: translateY(0); }
+}
+
+/* Heart pulse */
+@keyframes heartPulse {
+  0% { transform: rotate(45deg) scale(1); opacity: 1; }
+  50% { transform: rotate(45deg) scale(1.08); opacity: 0.95; }
+  100% { transform: rotate(45deg) scale(1); opacity: 1; }
+}
+
+/* When open, show the wrapper and animate the paper */
+.paper-wrap.open {
+  display: flex;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+.paper-wrap.open .paper {
+  animation: paperPopIn 420ms cubic-bezier(.2,.9,.2,1) both;
+}
+.paper-wrap.open .paper .paper-title .heart {
+  animation: heartPulse 1200ms ease-in-out infinite;
+  transform-origin: center;
+}
+/* subtle repeat bounce a short while after opening */
+.paper-wrap.open .paper {
+  animation-name: paperPopIn, paperBounce;
+  animation-duration: 420ms, 1200ms;
+  animation-fill-mode: both, none;
+  animation-delay: 0ms, 520ms;
+  animation-timing-function: cubic-bezier(.2,.9,.2,1), ease-in-out;
+}
+
+/* small hover lift for letter itself (extra tactile feel) */
+.paper:hover .letter {
+  transform: translateY(-4px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 18px 40px rgba(6,8,14,0.08);
+}
+
+/* Accessibility: respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .paper, .paper-wrap, .heart, .btn-paper, .paper:hover .letter { animation: none !important; transition: none !important; transform: none !important; }
+}
+
+/* small accessibility: reduce motion for other UI */
+@media (prefers-reduced-motion: reduce) {
+  .overlay, .card, canvas { transition: none !important; animation: none !important; }
+}
+
+/* -------------------------
+   Mobile / narrow layouts
+   ------------------------- */
+@media (max-width: 520px), (max-height: 700px) {
+  /* make sure the modal has room on short screens and respects safe area */
+  .paper-wrap {
+    align-items: flex-end;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  /* anchor it slightly above the bottom with safe-area considered */
+  .paper {
+    width: 100%;
+    max-width: 720px;
+    border-radius: 14px 14px 10px 10px;
+    padding: 5px;
+    margin-bottom: calc(80px + var(--safe-bottom));
+    box-shadow:
+      0 24px 48px rgba(6,8,14,0.48),
+      0 6px 16px rgba(0,0,0,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.6);
+    transform-origin: center bottom;
+  }
+
+  .paper::before { /* smaller tape */
+    width: 96px;
+    height: 22px;
+    top: -10px;
+  }
+  .paper::after {
+    top: 8px;
+    right: 10px;
+    font-size: 16px;
+  }
+
+  .paper-inner {
+    padding: 10px 16px 14px;
+  }
+
+  .paper-title {
+    font-size: 18px;
+    gap: 8px;
+  }
+
+  .paper-sub {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  .letter {
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 96%;
+    padding: 12px 12px;
+    border-radius: 12px;
+  }
+
+  .paper-cta {
+    flex-direction: column;
+    gap: 10px;
+    padding: 6px 6px 8px;
+    width: 100%;
+  }
+  .btn-paper, .btn-quiet {
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px;
+    padding: 12px 14px;
+  }
+
+  .heart {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* reduce animation magnitude on small screens for comfort */
+  @keyframes paperPopIn {
+    0% {
+      transform: translateY(18px) rotate(-4deg) scale(0.984);
+      opacity: 0;
+      filter: blur(4px) saturate(0.9);
     }
+    60% {
+      transform: translateY(-6px) rotate(1.5deg) scale(1.01);
+      opacity: 1;
+      filter: blur(0);
+    }
+    100% {
+      transform: translateY(0) rotate(0deg) scale(1);
+      opacity: 1;
+    }
+  }
+  /* shorter bounce */
+  @keyframes paperBounce {
+    0% { transform: translateY(0); }
+    40% { transform: translateY(-4px); }
+    70% { transform: translateY(1px); }
+    100% { transform: translateY(0); }
+  }
+}
+
+/* Very small narrow screens (old phones / tiny windows) */
+@media (max-width: 360px) {
+  .paper {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px 12px 8px 8px;
+  }
+  .paper-title { font-size: 16px; }
+  .letter { font-size: 14px; padding: 10px; }
+  .btn-paper, .btn-quiet { font-size: 15px; padding: 10px; min-height: 44px; }
+}

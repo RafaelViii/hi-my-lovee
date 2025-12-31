@@ -1,10 +1,10 @@
-
   /*
     main.html — Canvas fireworks show
     Changes: Runs endlessly (no 5-minute stop). Minimal edits from original:
       - Removed the timer that set stopSpawning after 5 minutes and the countdown logic.
       - Kept reset/replay behavior (page reload).
       - Status overlay updated to say "endless".
+      - Added popup open/close and initial cute animation on page load.
   */
 
   (function () {
@@ -408,13 +408,91 @@
     window.addEventListener('blur', () => { spawnIntervalMs = 1200; });
     window.addEventListener('focus', () => { spawnIntervalMs = 600; });
 
-    // Accessibility: clicking anywhere triggers a big burst
-    canvas.addEventListener('pointerdown', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      createExplosion(x, y, choice(['star', 'ring', 'flower', 'circle']), choice(choice(palette)));
+  // Accessibility: clicking anywhere triggers a big burst
+  // Guarded: ignore canvas interactions while the popup is visible
+  const popupWrap = document.getElementById('paperWrap');
+  function isPopupOpen() {
+    // If the body has the popup-open class, treat popup as open
+    if (document.body.classList.contains('popup-open')) return true;
+    if (!popupWrap) return false;
+    return popupWrap.getAttribute('aria-hidden') === 'false' && popupWrap.style.display !== 'none';
+  }
+
+  // Open / close popup with gentle animation
+  function openPopup() {
+    if (!popupWrap) return;
+    // show wrapper (display:flex) and then add open class to trigger animations
+    popupWrap.style.display = 'flex';
+    // small delay to ensure CSS transition/animation runs
+    requestAnimationFrame(() => {
+      popupWrap.classList.add('open');
+      popupWrap.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('popup-open');
     });
+  }
+
+  function closePopup() {
+    if (!popupWrap) return;
+    popupWrap.classList.remove('open');
+    popupWrap.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('popup-open');
+    // hide after animation finishes
+    setTimeout(() => {
+      // double-check that no other code re-opened it
+      if (!popupWrap.classList.contains('open')) {
+        popupWrap.style.display = 'none';
+      }
+    }, 520);
+  }
+
+  // Open the popup once on initial page load with a small delay to let the scene settle
+  // Respect reduced-motion: if user prefers reduced motion, still open but without animation
+  try {
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const initialDelay = prefersReduced ? 200 : 900;
+    setTimeout(() => {
+      openPopup();
+    }, initialDelay);
+  } catch (e) {
+    // fallback: still open after 900ms
+    setTimeout(openPopup, 900);
+  }
+
+  // Wire popup controls
+  const paperClose = document.getElementById('paperClose');
+  const paperLater = document.getElementById('paperLater');
+  const paperCelebrate = document.getElementById('paperCelebrate');
+
+  if (paperClose) paperClose.addEventListener('click', closePopup);
+  if (paperLater) paperLater.addEventListener('click', closePopup);
+  if (paperCelebrate) {
+    paperCelebrate.addEventListener('click', () => {
+      // small celebratory burst in center of screen when user chooses to celebrate
+      createExplosion(W/2, H/2 - Math.max(60, H*0.08), 'flower', choice(choice(palette)));
+      // close the popup after handful of ms to allow immediate visual feedback
+      setTimeout(closePopup, 220);
+    });
+  }
+
+  // Close popup on Escape key
+  window.addEventListener('keydown', (e) => {
+    if ((e.key === 'Escape' || e.key === 'Esc') && isPopupOpen()) {
+      closePopup();
+    }
+  });
+
+  canvas.addEventListener('pointerdown', (e) => {
+    // If popup is open, ignore canvas clicks so fireworks don't trigger and popup won't close
+    if (isPopupOpen()) {
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    createExplosion(x, y, choice(['star', 'ring', 'flower', 'circle']), choice(choice(palette)));
+  });
 
     // Keyboard: press R to replay
     window.addEventListener('keydown', (e) => {
