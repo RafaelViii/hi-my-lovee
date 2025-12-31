@@ -99,6 +99,8 @@
       </div>
     </div>
 
+    <!-- Hint element added so JS can update messages (prevents script errors) -->
+    <div id="hint" class="hint" role="status" aria-live="polite"></div>
     
   </div>
 
@@ -106,7 +108,7 @@
   // -------------------- CONFIG (edit only this line) --------------------
   // Example: "today 3:00pm" will mean that exact time today; if you open after it has passed,
   // this page will show expired state and then automatically redirect to main.html.
-  const TARGET = "today 5:58pm";
+  const TARGET = "nextYear";
   // ---------------------------------------------------------------------
 
   function parseTarget(target){
@@ -208,21 +210,22 @@
   const now = new Date();
   if (targetDate <= now) {
     // show expired info briefly then redirect immediately to main.html
-    hintEl.textContent = 'Target has already passed — redirecting to the show...';
-    hintEl.classList.add('expired');
+    if (hintEl) {
+      hintEl.textContent = 'Target has already passed — redirecting to the show...';
+      hintEl.classList.add('expired');
+    } else {
+      console.warn('hint element not found; continuing redirect.');
+    }
     hoursEl.textContent = '00';
     minutesEl.textContent = '00';
     secondsEl.textContent = '00';
     // short pause so user sees zeros and the expired message
     setTimeout(() => {
-      // final guard in case system clock changes; redirect to main.html
-      window.location.href = 'for you.html';
+      // final guard in case system clock changes; redirect to for you.html
+      window.location.href = encodeURI('for you.html');
     }, 700);
   } else {
-    // start countdown normally — when reaches zero it will redirect to main.html
-    let interval = setInterval(tick, 250);
-    tick(); // immediate
-
+    // declare tick first to avoid block-hoisting inconsistencies
     function tick(){
       const n = new Date();
       const diff = targetDate - n;
@@ -232,9 +235,12 @@
         minutesEl.textContent = '00';
         secondsEl.textContent = '00';
         clearInterval(interval);
+        if (hintEl) {
+          hintEl.textContent = 'Time reached — launching the show...';
+        }
         // small visible pause so user sees 00:00:00
         setTimeout(() => {
-          window.location.href = 'for you.html';
+          window.location.href = encodeURI('for you.html');
         }, 500);
         return;
       }
@@ -243,6 +249,9 @@
       minutesEl.textContent = String(parts.minutes).padStart(2,'0');
       secondsEl.textContent = String(parts.seconds).padStart(2,'0');
     }
+
+    let interval = setInterval(tick, 250);
+    tick(); // immediate
   }
 
   // expose for debugging (optional)
