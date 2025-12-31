@@ -112,7 +112,8 @@
         this.trail = [];
         this.trailMax = 6;
         this.exploded = false;
-        this.pattern = choice(['circle', 'ring', 'spiral', 'star', 'flower', 'fountain']);
+        this.pattern = choice(['heart','flower','ring','spiral']);
+        // this.pattern = choice(['circle', 'ring', 'spiral', 'star', 'flower', 'fountain', 'heart']);
       }
       update(dt) {
         this.trail.push({ x: this.x, y: this.y });
@@ -226,90 +227,193 @@
       return `rgba(${r},${g},${b},${a})`;
     }
 
-    // Create explosion patterns
-    function createExplosion(x, y, pattern, colorShades) {
-      const baseCount = Math.floor(rand(40, 140));
-      const count = Math.min(220, Math.max(24, baseCount));
-      if (particles.length > MAX_PARTICLES) return;
+    
+ // ---------------- HEART HELPER ----------------
+function heartPoints(count, scale = 0.32) {
+  const points = [];
+  for (let i = 0; i < count; i++) {
+    const t = (i / count) * Math.PI * 2;
 
-      if (pattern === 'circle') {
-        for (let i = 0; i < count; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = rand(1.8, 5.5) * (0.9 + Math.random()*0.8);
-          const vx = Math.cos(angle) * speed;
-          const vy = Math.sin(angle) * speed;
-          const color = choice(colorShades);
-          particles.push(new Particle(x, y, vx, vy, color, rand(900,1700), rand(1.6,3.2)));
-        }
-      } else if (pattern === 'ring') {
-        const ringCount = Math.floor(count * 0.6);
-        for (let i = 0; i < ringCount; i++) {
-          const angle = (i / ringCount) * Math.PI * 2 + rand(-0.02, 0.02);
-          const speed = rand(3.4, 6.2);
-          const vx = Math.cos(angle) * speed;
-          const vy = Math.sin(angle) * speed;
-          particles.push(new Particle(x, y, vx, vy, choice(colorShades), rand(1100,1900), rand(2.0,3.4)));
-        }
-        for (let i = 0; i < Math.floor(count*0.35); i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = rand(0.5, 2.2);
-          const vx = Math.cos(angle) * speed;
-          const vy = Math.sin(angle) * speed;
-          particles.push(new Particle(x, y, vx, vy, choice(colorShades), rand(700,1200), rand(1.2,2.2)));
-        }
-      } else if (pattern === 'spiral') {
-        const turns = rand(2.5, 4.5);
-        for (let i = 0; i < count; i++) {
-          const frac = i / count;
-          const angle = frac * turns * Math.PI * 2 + rand(-0.1,0.1);
-          const speed = 1.6 + frac * rand(3.0,6.5);
-          const vx = Math.cos(angle) * speed;
-          const vy = Math.sin(angle) * speed;
-          particles.push(new Particle(x, y, vx, vy, choice(colorShades), rand(1000,2200), rand(1.6,3.0)));
-        }
-      } else if (pattern === 'star') {
-        const spikes = Math.floor(rand(5, 9));
-        for (let i = 0; i < count; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const mod = 1 + 0.7 * Math.sin(angle * spikes * 0.5 + rand(0,1));
-          const speed = rand(2.6, 5.2) * mod;
-          const vx = Math.cos(angle) * speed;
-          const vy = Math.sin(angle) * speed;
-          particles.push(new Particle(x, y, vx, vy, choice(colorShades), rand(1000,2000), rand(1.6,3.2)));
-        }
-      } else if (pattern === 'flower') {
-        const petals = Math.floor(rand(4,8));
-        for (let i = 0; i < count; i++) {
-          const angle = (i / count) * Math.PI * 2;
-          const petalStrength = 1 + Math.sin(petals * angle) * 0.6;
-          const speed = rand(2.0, 5.2) * petalStrength;
-          const vx = Math.cos(angle) * speed;
-          const vy = Math.sin(angle) * speed;
-          particles.push(new Particle(x, y, vx, vy, choice(colorShades), rand(900,2100), rand(1.6,3.2)));
-        }
-      } else if (pattern === 'fountain') {
-        for (let i = 0; i < count; i++) {
-          const angle = rand(-Math.PI*0.6, Math.PI*0.6);
-          const speed = rand(1.8, 4.6);
-          const vx = Math.cos(angle) * speed;
-          const vy = Math.sin(angle) * speed - rand(1.4, 3.2);
-          particles.push(new Particle(x, y, vx, vy, choice(colorShades), rand(1400,2600), rand(1.8,3.6)));
-        }
-      }
+    // Parametric heart curve
+    const x = 16 * Math.pow(Math.sin(t), 3);
+    const y =
+      13 * Math.cos(t) -
+      5 * Math.cos(2 * t) -
+      2 * Math.cos(3 * t) -
+      Math.cos(4 * t);
 
-      if (Math.random() < 0.18) {
-        setTimeout(() => {
-          const miniCount = Math.floor(rand(12, 36));
-          for (let i = 0; i < miniCount; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = rand(0.6, 2.4);
-            const vx = Math.cos(angle) * speed;
-            const vy = Math.sin(angle) * speed;
-            particles.push(new Particle(x + rand(-8,8), y + rand(-8,8), vx, vy, choice(choice(palette)), rand(700,1000), rand(1.2,2.4)));
-          }
-        }, rand(120, 520));
-      }
+    points.push({
+      x: x * scale,
+      y: -y * scale // invert so heart faces up
+    });
+  }
+  return points;
+}
+
+// ---------------- EXPLOSIONS ----------------
+function createExplosion(x, y, pattern, colorShades) {
+  const baseCount = Math.floor(rand(40, 140));
+  const count = Math.min(220, Math.max(24, baseCount));
+  if (particles.length > MAX_PARTICLES) return;
+
+  if (pattern === 'circle') {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = rand(1.8, 5.5) * (0.9 + Math.random() * 0.8);
+      particles.push(
+        new Particle(
+          x, y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          choice(colorShades),
+          rand(900, 1700),
+          rand(1.6, 3.2)
+        )
+      );
     }
+
+  } else if (pattern === 'ring') {
+    const ringCount = Math.floor(count * 0.6);
+    for (let i = 0; i < ringCount; i++) {
+      const angle = (i / ringCount) * Math.PI * 2 + rand(-0.02, 0.02);
+      const speed = rand(3.4, 6.2);
+      particles.push(
+        new Particle(
+          x, y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          choice(colorShades),
+          rand(1100, 1900),
+          rand(2.0, 3.4)
+        )
+      );
+    }
+    for (let i = 0; i < Math.floor(count * 0.35); i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = rand(0.5, 2.2);
+      particles.push(
+        new Particle(
+          x, y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          choice(colorShades),
+          rand(700, 1200),
+          rand(1.2, 2.2)
+        )
+      );
+    }
+
+  } else if (pattern === 'spiral') {
+    const turns = rand(2.5, 4.5);
+    for (let i = 0; i < count; i++) {
+      const frac = i / count;
+      const angle = frac * turns * Math.PI * 2 + rand(-0.1, 0.1);
+      const speed = 1.6 + frac * rand(3.0, 6.5);
+      particles.push(
+        new Particle(
+          x, y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          choice(colorShades),
+          rand(1000, 2200),
+          rand(1.6, 3.0)
+        )
+      );
+    }
+
+  } else if (pattern === 'star') {
+    const spikes = Math.floor(rand(5, 9));
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const mod = 1 + 0.7 * Math.sin(angle * spikes * 0.5 + rand(0, 1));
+      const speed = rand(2.6, 5.2) * mod;
+      particles.push(
+        new Particle(
+          x, y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          choice(colorShades),
+          rand(1000, 2000),
+          rand(1.6, 3.2)
+        )
+      );
+    }
+
+  } else if (pattern === 'flower') {
+    const petals = Math.floor(rand(4, 8));
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const petalStrength = 1 + Math.sin(petals * angle) * 0.6;
+      const speed = rand(2.0, 5.2) * petalStrength;
+      particles.push(
+        new Particle(
+          x, y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed,
+          choice(colorShades),
+          rand(900, 2100),
+          rand(1.6, 3.2)
+        )
+      );
+    }
+
+  } else if (pattern === 'heart') {
+    const heart = heartPoints(count, rand(0.30, 0.38));
+    for (let i = 0; i < heart.length; i++) {
+      const p = heart[i];
+      const speed = rand(0.9, 1.6);
+      particles.push(
+        new Particle(
+          x, y,
+          p.x * speed,
+          p.y * speed,
+          choice(colorShades),
+          rand(1600, 2600),
+          rand(1.8, 3.4)
+        )
+      );
+    }
+
+  } else if (pattern === 'fountain') {
+    for (let i = 0; i < count; i++) {
+      const angle = rand(-Math.PI * 0.6, Math.PI * 0.6);
+      const speed = rand(1.8, 4.6);
+      particles.push(
+        new Particle(
+          x, y,
+          Math.cos(angle) * speed,
+          Math.sin(angle) * speed - rand(1.4, 3.2),
+          choice(colorShades),
+          rand(1400, 2600),
+          rand(1.8, 3.6)
+        )
+      );
+    }
+  }
+
+  // Mini sparkle burst (unchanged)
+  if (Math.random() < 0.18) {
+    setTimeout(() => {
+      const miniCount = Math.floor(rand(12, 36));
+      for (let i = 0; i < miniCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = rand(0.6, 2.4);
+        particles.push(
+          new Particle(
+            x + rand(-8, 8),
+            y + rand(-8, 8),
+            Math.cos(angle) * speed,
+            Math.sin(angle) * speed,
+            choice(choice(palette)),
+            rand(700, 1000),
+            rand(1.2, 2.4)
+          )
+        );
+      }
+    }, rand(120, 520));
+  }
+}
+
 
     // spawn fireworks at variable intervals
     function spawnFirework() {
