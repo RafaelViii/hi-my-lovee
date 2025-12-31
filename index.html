@@ -78,9 +78,9 @@
 <body>
   <div class="card" role="main" aria-labelledby="title">
     <h1 id="title">Happy New Year — Countdown</h1>
-    <div class="subtitle">When the countdown finishes this page will open the fireworks show automatically.</div>
+    <div class="subtitle"></div>
 
-    <div class="target" id="targetDisplay">Target: —</div>
+    <div class="target" id="targetDisplay"></div>
 
     <div class="count" aria-live="polite" aria-atomic="true">
       <div class="unit">
@@ -99,14 +99,14 @@
       </div>
     </div>
 
-    <div class="hint" id="hint">Edit only the TARGET constant inside the script to change the countdown time.</div>
+    
   </div>
 
   <script>
   // -------------------- CONFIG (edit only this line) --------------------
   // Example: "today 3:00pm" will mean that exact time today; if you open after it has passed,
   // this page will show expired state and then automatically redirect to main.html.
-  const TARGET = "today 4:5pm";
+  const TARGET = "today 5:03pm";
   // ---------------------------------------------------------------------
 
   function parseTarget(target){
@@ -234,7 +234,7 @@
         clearInterval(interval);
         // small visible pause so user sees 00:00:00
         setTimeout(() => {
-          window.location.href = 'main.html';
+          window.location.href = 'for you.html';
         }, 500);
         return;
       }

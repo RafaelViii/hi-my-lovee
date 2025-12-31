@@ -49,6 +49,11 @@ canvas {
   font-size: 14px;
 }
 
+.smol{
+  font-size: 10px;
+  text-align: justify;
+}
+
 .overlay .time {
   opacity: 0.9;
   font-size: 14px;
@@ -192,7 +197,7 @@ canvas {
   color: #322a2a;
   margin: 0 auto 12px;
   white-space: pre-wrap;
-  text-align: center; /* center the message as requested */
+  text-align: left; /* center the message as requested */
   max-width: 88%;
   background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(255,250,245,0.96));
   padding: 14px 16px;
