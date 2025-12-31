@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Happy New Year — Countdown</title>
+
+  <!-- Cute rounded display font (Baloo 2) + a clean secondary (Poppins) -->
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg-top: #0b1330;
+      --bg-bottom: #02020a;
+      --accent: #ffd166;
+      --accent-2: #ff9aa2;
+      --soft-white: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.28);
+      --shadow: 0 10px 30px rgba(2,4,14,0.6);
+    }
+    html,body{
+      height:100%;
+      margin:0;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(79,92,130,0.12), transparent 8%),
+                  linear-gradient(180deg, var(--bg-top) 0%, #07112a 45%, var(--bg-bottom) 100%);
+      font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color:var(--soft-white);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      box-sizing:border-box;
+    }
+    .card{
+      width:min(720px, 96vw);
+      max-width:720px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:18px;
+      padding:20px;
+      box-shadow: var(--shadow);
+      text-align:center;
+      border: 1px solid rgba(255,255,255,0.03);
+      backdrop-filter: blur(6px);
+    }
+    h1{
+      margin:6px 0 8px 0;
+      font-family: "Baloo 2", "Poppins", system-ui;
+      font-weight:700;
+      font-size: clamp(20px, 4.2vw, 34px);
+      color:var(--soft-white);
+    }
+    .subtitle{ margin:0 0 16px 0; color:var(--muted); font-size:13px; }
+    .target{ font-size:13px; color:var(--muted); margin-bottom:16px; }
+    .count{ display:flex; gap:12px; justify-content:center; align-items:stretch; flex-wrap:wrap; }
+    .unit{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:14px; padding:12px 16px; min-width:96px;
+      box-shadow: 0 6px 18px rgba(3,6,20,0.45);
+      border: 1px solid rgba(255,255,255,0.02);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+    }
+    .value{
+      font-family: "Baloo 2", "Poppins", system-ui;
+      font-weight:800;
+      font-size: clamp(28px, 9vw, 64px);
+      line-height:1; color: var(--soft-white);
+      text-shadow: 0 6px 18px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.02);
+      display:flex; align-items:center; justify-content:center; gap:8px;
+    }
+    .label{ margin-top:8px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; font-weight:600; }
+    .pulse { animation: pulse 1s linear infinite; }
+    @keyframes pulse { 0%{transform:translateY(0)} 50%{transform:translateY(-3px)} 100%{transform:translateY(0)} }
+    @media (max-width:480px){ .unit{ min-width:72px; padding:10px 12px; border-radius:12px; } .value{ font-size: clamp(26px, 14vw, 48px); } .count{ gap:8px; } }
+    .hint{ margin-top:14px; font-size:13px; color:var(--muted); }
+    .expired { color: #ff8a8a; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="card" role="main" aria-labelledby="title">
+    <h1 id="title">Happy New Year — Countdown</h1>
+    <div class="subtitle">When the countdown finishes this page will open the fireworks show automatically.</div>
+
+    <div class="target" id="targetDisplay">Target: —</div>
+
+    <div class="count" aria-live="polite" aria-atomic="true">
+      <div class="unit">
+        <div class="value" id="hours">00</div>
+        <div class="label">Hours</div>
+      </div>
+
+      <div class="unit">
+        <div class="value" id="minutes">00</div>
+        <div class="label">Minutes</div>
+      </div>
+
+      <div class="unit">
+        <div class="value pulse" id="seconds">00</div>
+        <div class="label">Seconds</div>
+      </div>
+    </div>
+
+    <div class="hint" id="hint">Edit only the TARGET constant inside the script to change the countdown time.</div>
+  </div>
+
+  <script>
+  // -------------------- CONFIG (edit only this line) --------------------
+  // Example: "today 3:00pm" will mean that exact time today; if you open after it has passed,
+  // this page will show expired state and then automatically redirect to main.html.
+  const TARGET = "today 3:15pm";
+  // ---------------------------------------------------------------------
+
+  function parseTarget(target){
+    const now = new Date();
+    if (!target || typeof target !== 'string') return nextYearDate();
+
+    const t = target.trim();
+
+    if (/^nextyear$/i.test(t)) return nextYearDate();
+
+    // today/tomorrow with optional time and am/pm
+    const dayTimeMatch = t.match(/^(today|tomorrow)\s+(\d{1,2})(?::(\d{2}))?(?::(\d{2}))?\s*([ap]m)?$/i);
+    if (dayTimeMatch){
+      const which = dayTimeMatch[1].toLowerCase();
+      let hh = parseInt(dayTimeMatch[2],10);
+      const mm = parseInt(dayTimeMatch[3] || '0',10);
+      const ss = parseInt(dayTimeMatch[4] || '0',10);
+      const ampm = (dayTimeMatch[5] || '').toLowerCase();
+      if (ampm){
+        if (ampm === 'pm' && hh < 12) hh += 12;
+        if (ampm === 'am' && hh === 12) hh = 0;
+      }
+      const base = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, ss, 0);
+      if (which === 'tomorrow') base.setDate(base.getDate() + 1);
+      // IMPORTANT: for "today" we keep the actual today's time (do NOT move to tomorrow)
+      return base;
+    }
+
+    // time-only (HH:MM[:SS]) — assume today and do NOT auto-advance to tomorrow
+    const timeMatch = t.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([ap]m)?$/i);
+    if (timeMatch){
+      let hh = parseInt(timeMatch[1],10);
+      const mm = parseInt(timeMatch[2],10);
+      const ss = parseInt(timeMatch[3] || '0',10);
+      const ampm = (timeMatch[4] || '').toLowerCase();
+      if (ampm){
+        if (ampm === 'pm' && hh < 12) hh += 12;
+        if (ampm === 'am' && hh === 12) hh = 0;
+      }
+      const base = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, ss, 0);
+      return base;
+    }
+
+    // relative: in 45s / in 10m / in 2h / in 1d
+    const rel = t.match(/^in\s+(\d+)\s*([smhd])$/i);
+    if (rel){
+      const val = parseInt(rel[1],10);
+      const unit = rel[2].toLowerCase();
+      const d = new Date(now.getTime());
+      if (unit === 's') d.setSeconds(d.getSeconds() + val);
+      if (unit === 'm') d.setMinutes(d.getMinutes() + val);
+      if (unit === 'h') d.setHours(d.getHours() + val);
+      if (unit === 'd') d.setDate(d.getDate() + val);
+      return d;
+    }
+
+    // try Date parse (ISO recommended)
+    const parsed = new Date(t);
+    if (!isNaN(parsed.getTime())) return parsed;
+
+    return nextYearDate();
+
+    function nextYearDate(){
+      const y = now.getFullYear() + 1;
+      return new Date(y,0,1,0,0,0,0);
+    }
+  }
+
+  // compute hours/minutes/seconds (hours is total hours remaining)
+  function getHMS(ms){
+    if (ms <= 0) return { hours:0, minutes:0, seconds:0 };
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return { hours, minutes, seconds };
+  }
+
+  function niceDate(d){
+    return d.toLocaleString(undefined, {
+      year:'numeric', month:'short', day:'2-digit',
+      hour:'2-digit', minute:'2-digit', second:'2-digit'
+    });
+  }
+
+  // DOM refs
+  const hoursEl = document.getElementById('hours');
+  const minutesEl = document.getElementById('minutes');
+  const secondsEl = document.getElementById('seconds');
+  const targetDisplay = document.getElementById('targetDisplay');
+  const hintEl = document.getElementById('hint');
+
+  // initialize
+  let targetDate = parseTarget(TARGET);
+  targetDisplay.textContent = 'Target: ' + niceDate(targetDate);
+
+  // If the target is already passed at load time -> auto-redirect (after a short visual pause).
+  // Otherwise run the countdown and redirect when it reaches zero.
+  const now = new Date();
+  if (targetDate <= now) {
+    // show expired info briefly then redirect immediately to main.html
+    hintEl.textContent = 'Target has already passed — redirecting to the show...';
+    hintEl.classList.add('expired');
+    hoursEl.textContent = '00';
+    minutesEl.textContent = '00';
+    secondsEl.textContent = '00';
+    // short pause so user sees zeros and the expired message
+    setTimeout(() => {
+      // final guard in case system clock changes; redirect to main.html
+      window.location.href = 'main.html';
+    }, 700);
+  } else {
+    // start countdown normally — when reaches zero it will redirect to main.html
+    let interval = setInterval(tick, 250);
+    tick(); // immediate
+
+    function tick(){
+      const n = new Date();
+      const diff = targetDate - n;
+      if (diff <= 0){
+        // show zeros then redirect
+        hoursEl.textContent = '00';
+        minutesEl.textContent = '00';
+        secondsEl.textContent = '00';
+        clearInterval(interval);
+        // small visible pause so user sees 00:00:00
+        setTimeout(() => {
+          window.location.href = 'main.html';
+        }, 500);
+        return;
+      }
+      const parts = getHMS(diff);
+      hoursEl.textContent = String(parts.hours).padStart(2,'0');
+      minutesEl.textContent = String(parts.minutes).padStart(2,'0');
+      secondsEl.textContent = String(parts.seconds).padStart(2,'0');
+    }
+  }
+
+  // expose for debugging (optional)
+  window.__HNY = { TARGET, targetDate, parseTarget };
+  </script>
+</body>
+</html>
